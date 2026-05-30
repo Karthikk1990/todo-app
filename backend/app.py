@@ -166,6 +166,7 @@ def update_todo(todo_id):
 
 
 # --- START ---
+# Learning note: this is where the server boots up and begins listening for requests.
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
