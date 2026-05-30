@@ -1,0 +1,12 @@
+# Python cache files — generated automatically, never need to be shared
+__pycache__/
+*.pyc
+
+# The SQLite database — contains local data, not source code
+backend/todos.db
+
+# macOS system file — created automatically by Mac, not part of the project
+.DS_Store
+
+# Environment files — these often contain secrets like passwords (good habit to always ignore)
+.env

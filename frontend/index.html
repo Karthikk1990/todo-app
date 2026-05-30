@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <!--
+    HEAD: invisible setup section.
+    The browser reads this but doesn't display it.
+    It's like the backstage area — lighting rigs, sound boards, etc.
+  -->
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Todo App</title>
+
+    <!-- Tell the browser to load our CSS file for styling -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <!--
+    BODY: everything the user actually sees on screen.
+    Every visible element lives here.
+  -->
+  <body>
+
+    <!--
+      A "div" is a generic box/container. It groups things together.
+      The "class" attribute is a label we use to style it in CSS.
+    -->
+    <div class="container">
+
+      <h1>My Todo List</h1>
+
+      <!-- INPUT AREA: where the user types a new todo and clicks Add -->
+      <div class="input-row">
+
+        <!--
+          input: a text box the user can type into.
+          - type="text" means it accepts regular text
+          - id="todo-input" gives it a unique name so JavaScript can find it
+          - placeholder is the grey hint text shown when it's empty
+        -->
+        <input
+          type="text"
+          id="todo-input"
+          placeholder="What do you need to do?"
+        />
+
+        <!--
+          button: a clickable button.
+          - onclick="addTodo()" means: when clicked, run the addTodo function
+            in our script.js file. This is how HTML and JavaScript connect.
+        -->
+        <button onclick="addTodo()">Add</button>
+
+      </div>
+
+      <!--
+        ul = "unordered list" — a bullet-point style list.
+        It starts empty. JavaScript will add <li> items into it dynamically.
+        id="todo-list" lets JavaScript find and modify this element.
+      -->
+      <ul id="todo-list"></ul>
+
+    </div>
+
+    <!--
+      Load our JavaScript file LAST — at the bottom of body.
+      This ensures the HTML elements above exist before JavaScript tries to use them.
+      If we loaded it at the top, JavaScript would try to find #todo-list
+      before it was created, and fail.
+    -->
+    <script src="script.js"></script>
+
+  </body>
+</html>

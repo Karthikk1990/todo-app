@@ -1,0 +1,216 @@
+/*
+  CSS works by "selecting" an HTML element and then applying rules to it.
+  The format is always:
+      selector {
+          property: value;
+      }
+*/
+
+/*
+  * selects EVERY element on the page.
+  box-sizing: border-box is a sensible default that makes sizing predictable.
+  Think of it as setting the same unit system everywhere before measuring anything.
+*/
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+  body is the entire page background.
+  We're setting a light grey background and a readable font.
+  font-family lists fallback fonts — if the first isn't available, try the next.
+*/
+body {
+  background-color: #f0f2f5;
+  font-family: "Segoe UI", Arial, sans-serif;
+  display: flex;               /* flexbox centers the container on the page */
+  justify-content: center;     /* horizontally centered */
+  padding-top: 60px;
+}
+
+/*
+  .container selects any element with class="container".
+  The dot (.) means "class".
+  This is the white card in the middle of the page.
+*/
+.container {
+  background: white;
+  border-radius: 12px;         /* rounded corners */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);  /* subtle shadow around the card */
+  padding: 36px;
+  width: 100%;
+  max-width: 500px;            /* never wider than 500px even on big screens */
+}
+
+/* h1 selects the big heading — "My Todo List" */
+h1 {
+  font-size: 28px;
+  color: #1a1a2e;
+  margin-bottom: 24px;
+}
+
+/*
+  .input-row is the div wrapping the text box and Add button.
+  display: flex makes its children sit side by side (instead of stacked).
+  gap adds space between them.
+*/
+.input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+/*
+  input selects the text box.
+  flex: 1 means "take up all remaining space" — so the button stays small
+  and the input stretches to fill the rest of the row.
+*/
+input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;               /* removes the default blue browser outline */
+  transition: border-color 0.2s;  /* smoothly animates border color change */
+}
+
+/* :focus applies when the user has clicked into the input box */
+input:focus {
+  border-color: #4f46e5;       /* purple border when active */
+}
+
+/* button is the Add button */
+button {
+  padding: 12px 20px;
+  background-color: #4f46e5;   /* purple */
+  color: white;
+  border: none;                /* remove default browser button border */
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;             /* show a hand cursor on hover */
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #4338ca;   /* slightly darker purple on hover */
+}
+
+/*
+  ul is the todo list container.
+  list-style: none removes the default bullet points.
+*/
+ul {
+  list-style: none;
+}
+
+/*
+  li is each individual todo item.
+  display: flex lets us put the checkbox, text, and delete button in a row.
+  align-items: center vertically centers them.
+*/
+li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0;  /* thin line between todos */
+}
+
+/* Remove the bottom border from the very last todo item */
+li:last-child {
+  border-bottom: none;
+}
+
+/*
+  .todo-text is the span holding the todo text.
+  flex: 1 makes it stretch and push the delete button to the far right.
+*/
+.todo-text {
+  flex: 1;
+  font-size: 15px;
+  color: #333;
+}
+
+/*
+  .done is added to the text when a todo is completed.
+  line-through draws a strikethrough, and the color fades to grey.
+*/
+.done {
+  text-decoration: line-through;
+  color: #aaa;
+}
+
+/* The delete button inside each todo item */
+.delete-btn {
+  background: none;            /* no background — just an X */
+  border: none;
+  color: #ccc;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.delete-btn:hover {
+  color: #e53e3e;              /* turns red on hover */
+}
+
+/* The edit button — pencil icon, sits to the left of delete */
+.edit-btn {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.edit-btn:hover {
+  color: #4f46e5;               /* turns purple on hover, matching the app's accent colour */
+}
+
+/*
+  The save button replaces the edit button while a todo is being edited.
+  It's small and green so it's clearly a "confirm" action.
+*/
+.save-btn {
+  background-color: #38a169;    /* green */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.save-btn:hover {
+  background-color: #2f855a;    /* darker green on hover */
+}
+
+/*
+  The inline edit input that replaces the todo text span while editing.
+  flex: 1 makes it stretch to fill the available space, same as .todo-text does.
+*/
+.edit-input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 2px solid #4f46e5;    /* purple border to signal "this is active/editable" */
+  border-radius: 6px;
+  font-size: 15px;
+  outline: none;
+}
+
+/* The checkbox inside each todo */
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #4f46e5;       /* makes the checkmark purple when ticked */
+}
