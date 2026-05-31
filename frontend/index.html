@@ -1,80 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
-
-  <!--
-    HEAD: invisible setup section.
-    The browser reads this but doesn't display it.
-    It's like the backstage area — lighting rigs, sound boards, etc.
-  -->
   <head>
     <meta charset="UTF-8" />
     <title>My Todo App</title>
-
-    <!-- Tell the browser to load our CSS file for styling -->
     <link rel="stylesheet" href="style.css" />
-  </head>
 
-  <!--
-    BODY: everything the user actually sees on screen.
-    Every visible element lives here.
-  -->
+    <!--
+      These three lines load React from the internet (no install needed).
+      - react: the core library (the brain)
+      - react-dom: lets React talk to the browser's HTML (the hands)
+      - babel: converts JSX into plain JavaScript the browser understands
+    -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
   <body>
 
     <!--
-      A "div" is a generic box/container. It groups things together.
-      The "class" attribute is a label we use to style it in CSS.
+      This single div is the ONLY thing React needs in our HTML.
+      React will inject the entire app inside it.
+      Think of it as an empty stage — React handles all the props and actors.
     -->
-    <div class="container">
-
-      <!-- Shows the logged-in user's email and a logout button -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-        <h1 style="margin-bottom:0;">My Todo List</h1>
-        <div style="text-align:right;">
-          <p id="user-email" style="font-size:13px; color:#888; margin-bottom:4px;"></p>
-          <button onclick="logout()" style="padding:6px 12px; font-size:12px; background:#e53e3e;">Log out</button>
-        </div>
-      </div>
-
-      <!-- INPUT AREA: where the user types a new todo and clicks Add -->
-      <div class="input-row">
-
-        <!--
-          input: a text box the user can type into.
-          - type="text" means it accepts regular text
-          - id="todo-input" gives it a unique name so JavaScript can find it
-          - placeholder is the grey hint text shown when it's empty
-        -->
-        <input
-          type="text"
-          id="todo-input"
-          placeholder="What do you need to do?"
-        />
-
-        <!--
-          button: a clickable button.
-          - onclick="addTodo()" means: when clicked, run the addTodo function
-            in our script.js file. This is how HTML and JavaScript connect.
-        -->
-        <button onclick="addTodo()">Add</button>
-
-      </div>
-
-      <!--
-        ul = "unordered list" — a bullet-point style list.
-        It starts empty. JavaScript will add <li> items into it dynamically.
-        id="todo-list" lets JavaScript find and modify this element.
-      -->
-      <ul id="todo-list"></ul>
-
-    </div>
+    <div id="root"></div>
 
     <!--
-      Load our JavaScript file LAST — at the bottom of body.
-      This ensures the HTML elements above exist before JavaScript tries to use them.
-      If we loaded it at the top, JavaScript would try to find #todo-list
-      before it was created, and fail.
+      type="text/babel" tells Babel to process this file.
+      Without it, the browser sees JSX and crashes — it doesn't understand it natively.
     -->
-    <script src="script.js"></script>
+    <script type="text/babel" src="app.jsx"></script>
 
   </body>
 </html>
