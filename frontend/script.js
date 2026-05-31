@@ -176,6 +176,11 @@ function renderTodos(todos) {
   // Clear whatever is currently shown — we're about to redraw everything fresh
   list.innerHTML = "";
 
+  if (todos.length === 0) {
+    list.innerHTML = "<li style='color:#aaa; font-style:italic;'>No todos yet — add one above!</li>";
+    return;
+  }
+
   // Loop through each todo and build an HTML "li" element for it
   todos.forEach(todo => {
     /*
