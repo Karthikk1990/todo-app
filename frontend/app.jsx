@@ -22,7 +22,7 @@
   - In production (Vercel): we'll update this to the real Render URL
     after deployment. This is the one line you change when going live.
 */
-const API = "http://localhost:5000";
+const API = "https://todo-backend-rb0m.onrender.com";
 
 // ─── HELPER: auth headers ─────────────────────────────────────────────────
 // Same as before — reads the JWT token from localStorage and builds the header.
