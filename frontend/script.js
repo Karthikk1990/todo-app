@@ -219,15 +219,27 @@ function renderTodos(todos) {
 }
 
 
-// ─── ALLOW PRESSING ENTER TO ADD ───────────────────────────────────────────
+// ─── ALLOW PRESSING ENTER TO ADD OR SAVE ───────────────────────────────────
 /*
-  Quality of life: the user shouldn't have to click Add every time.
-  This listens for any key pressed, and if it's Enter, calls addTodo().
+  Quality of life: the user shouldn't have to click buttons every time.
+  This listens for Enter anywhere on the page.
 
-  addEventListener is how JavaScript "listens" for events (clicks, keypresses, etc).
+  But we have two situations to handle:
+    1. The user is typing in the main input box → call addTodo()
+    2. The user is typing in an edit input box  → call saveTodo() for that todo
+
+  document.activeElement is whichever element currently has keyboard focus.
+  We check its class to decide which situation we're in.
 */
 document.addEventListener("keydown", function(event) {
-  if (event.key === "Enter") {
+  if (event.key !== "Enter") return;
+
+  if (document.activeElement.classList.contains("edit-input")) {
+    // The user pressed Enter while editing a todo — extract the id and save.
+    // The edit input's id is "edit-{todo_id}", so we strip the "edit-" prefix.
+    const id = document.activeElement.id.replace("edit-", "");
+    saveTodo(id);
+  } else {
     addTodo();
   }
 });
