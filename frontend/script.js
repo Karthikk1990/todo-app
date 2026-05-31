@@ -9,6 +9,46 @@
 // The backend's address. If this ever changes, we only update it here.
 const API = "http://localhost:5000";
 
+/*
+  getToken() reads the JWT token from localStorage — where login.html saved it.
+  Every request to the backend needs to include this token in its headers.
+
+  authHeaders() builds the header object we attach to every fetch call.
+  Instead of repeating this in every function, we define it once here.
+*/
+function getToken() {
+  return localStorage.getItem("token");
+}
+
+function authHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${getToken()}`  // the wristband we show the backend
+  };
+}
+
+/*
+  If no token exists, the user isn't logged in.
+  Redirect them to login.html immediately.
+*/
+if (!getToken()) {
+  window.location.href = "login.html";
+}
+
+// Show the logged-in user's email in the header
+document.getElementById("user-email").textContent = localStorage.getItem("email");
+
+/*
+  logout() clears the token from localStorage and sends the user to login.
+  Without the token, every backend request will return 401 — so clearing it
+  is all we need to do to "log out".
+*/
+function logout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("email");
+  window.location.href = "login.html";
+}
+
 
 // ─── LOAD TODOS ON PAGE OPEN ───────────────────────────────────────────────
 /*
@@ -20,7 +60,7 @@ const API = "http://localhost:5000";
   JavaScript's way of pausing and waiting politely without freezing the page.
 */
 async function loadTodos() {
-  const response = await fetch(`${API}/todos`);  // send the GET request, wait
+  const response = await fetch(`${API}/todos`, { headers: authHeaders() });  // send the GET request with token
   const todos = await response.json();           // read the response as JSON, wait
   renderTodos(todos);                            // draw them on screen
 }
@@ -51,8 +91,8 @@ async function addTodo() {
   // Think of the "body" as the contents of an envelope we're mailing.
   await fetch(`${API}/todos`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },  // tells backend: "this is JSON"
-    body: JSON.stringify(newTodo)                      // convert JS object → JSON string
+    headers: authHeaders(),
+    body: JSON.stringify(newTodo)
   });
 
   input.value = "";  // clear the input box after adding
@@ -67,7 +107,8 @@ async function addTodo() {
 */
 async function deleteTodo(id) {
   await fetch(`${API}/todos/${id}`, {
-    method: "DELETE"
+    method: "DELETE",
+    headers: authHeaders()
   });
   loadTodos();  // refresh the list
 }
@@ -80,7 +121,8 @@ async function deleteTodo(id) {
 */
 async function toggleTodo(id) {
   await fetch(`${API}/todos/${id}`, {
-    method: "PATCH"
+    method: "PATCH",
+    headers: authHeaders()
   });
   loadTodos();  // refresh the list
 }
@@ -151,8 +193,8 @@ async function saveTodo(id) {
 
   await fetch(`${API}/todos/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: newText })  // send only the text — backend handles the rest
+    headers: authHeaders(),
+    body: JSON.stringify({ text: newText })
   });
 
   loadTodos();  // re-render all rows back into normal read mode

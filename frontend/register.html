@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Register</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Create Account</h1>
+
+      <div class="input-row">
+        <input type="email" id="email" placeholder="Email address" />
+      </div>
+      <div class="input-row">
+        <input type="password" id="password" placeholder="Password (min 6 characters)" />
+      </div>
+
+      <div class="input-row">
+        <button onclick="register()">Create Account</button>
+      </div>
+
+      <!-- Error and success messages appear here -->
+      <p id="message" style="margin-top:16px; font-size:14px;"></p>
+
+      <p style="margin-top:24px; font-size:14px; color:#666;">
+        Already have an account? <a href="login.html">Log in</a>
+      </p>
+    </div>
+
+    <script>
+      const API = "http://localhost:5000";
+
+      async function register() {
+        const email    = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const message  = document.getElementById("message");
+
+        const response = await fetch(`${API}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Registration worked — send them to login
+          message.style.color = "green";
+          message.textContent = "Account created! Redirecting to login...";
+          setTimeout(() => window.location.href = "login.html", 1500);
+        } else {
+          // Show the error message from the backend
+          message.style.color = "red";
+          message.textContent = data.error;
+        }
+      }
+    </script>
+  </body>
+</html>

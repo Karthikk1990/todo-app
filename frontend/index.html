@@ -26,7 +26,14 @@
     -->
     <div class="container">
 
-      <h1>My Todo List</h1>
+      <!-- Shows the logged-in user's email and a logout button -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h1 style="margin-bottom:0;">My Todo List</h1>
+        <div style="text-align:right;">
+          <p id="user-email" style="font-size:13px; color:#888; margin-bottom:4px;"></p>
+          <button onclick="logout()" style="padding:6px 12px; font-size:12px; background:#e53e3e;">Log out</button>
+        </div>
+      </div>
 
       <!-- INPUT AREA: where the user types a new todo and clicks Add -->
       <div class="input-row">

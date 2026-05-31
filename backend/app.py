@@ -2,89 +2,85 @@ import sqlite3
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from auth import register, login, verify_token, init_users_table
 
 # --- SETUP ---
 
 app = Flask(__name__)
 CORS(app)
 
-# Path to the SQLite database file.
-# Just like todos.json, it's a single file — but it's a real database inside.
 DB_FILE = os.path.join(os.path.dirname(__file__), "todos.db")
 
 
 # --- DATABASE SETUP ---
 
 def get_db():
-    """
-    Open a connection to the database.
-
-    A "connection" is like opening a phone call with the database.
-    You open it, do your work, then close it.
-    Every request gets its own connection — we don't share one globally
-    because that causes bugs when multiple requests happen at the same time.
-    """
     conn = sqlite3.connect(DB_FILE)
-
-    # row_factory makes rows behave like dictionaries: row["text"]
-    # instead of row[1]. Much easier to work with.
     conn.row_factory = sqlite3.Row
-
     return conn
 
 
 def init_db():
     """
-    Create the todos table if it doesn't already exist.
-    This runs once when the server starts.
-
-    A "table" is like a spreadsheet inside the database:
-    - Each column is a field: id, text, done
-    - Each row is one todo
-
-    SQL translation:
-      CREATE TABLE IF NOT EXISTS todos  → make a table called "todos" (skip if exists)
-      id TEXT PRIMARY KEY               → id column, text type, must be unique
-      text TEXT NOT NULL                → text column, can't be empty
-      done INTEGER DEFAULT 0            → done column, 0=false 1=true (SQL has no boolean)
+    Create the todos table.
+    Now includes a user_id column — every todo belongs to a specific user.
+    FOREIGN KEY links user_id to the users table, ensuring referential integrity:
+    you can't create a todo for a user that doesn't exist.
     """
     conn = get_db()
+    conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS todos (
-            id   TEXT PRIMARY KEY,
-            text TEXT NOT NULL,
-            done INTEGER DEFAULT 0
+            id      TEXT PRIMARY KEY,
+            text    TEXT NOT NULL,
+            done    INTEGER DEFAULT 0,
+            user_id INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
-    conn.commit()   # commit = "save these changes permanently"
+    conn.commit()
     conn.close()
 
 
-# Run init_db immediately when the server starts.
-# After the first run, CREATE TABLE IF NOT EXISTS means it safely does nothing.
+# Run both table setups when the server starts.
+# Users table must be created first because todos references it.
+init_users_table()
 init_db()
 
 
-# --- ROUTES ---
-# The routes are identical to before — same URLs, same responses.
-# Only the storage mechanism changed (SQL instead of JSON file).
-# The frontend will never know the difference.
+# --- AUTH ROUTES ---
+# These are public — no token required (you need them to GET a token).
+
+@app.route("/register", methods=["POST"])
+def handle_register():
+    return register()
+
+@app.route("/login", methods=["POST"])
+def handle_login():
+    return login()
+
+
+# --- TODO ROUTES ---
+# Every route below is PROTECTED — it calls verify_token() first.
+# If the token is missing or invalid, we return 401 (Unauthorised) immediately.
+# If valid, we get the user's id and only touch THEIR todos.
 
 @app.route("/todos", methods=["GET"])
 def get_todos():
     """
-    GET /todos — fetch all todos.
-
-    SQL: SELECT * FROM todos
-    Plain English: "Give me every row from the todos table."
+    GET /todos — fetch only the logged-in user's todos.
+    SQL: SELECT ... WHERE user_id = ?  ← the ? is the logged-in user's id
     """
+    user = verify_token()
+    if not user:
+        return jsonify({"error": "Please log in"}), 401
+
     conn = get_db()
-    rows = conn.execute("SELECT * FROM todos").fetchall()
+    rows = conn.execute(
+        "SELECT * FROM todos WHERE user_id = ?", (user["user_id"],)
+    ).fetchall()
     conn.close()
 
-    # Each row is a sqlite3.Row object. We convert it to a plain dict
-    # so jsonify can turn it into JSON to send to the frontend.
-    # done is stored as 0/1 in SQL — we convert it back to True/False here.
     todos = [
         {"id": row["id"], "text": row["text"], "done": bool(row["done"])}
         for row in rows
@@ -95,36 +91,40 @@ def get_todos():
 @app.route("/todos", methods=["POST"])
 def add_todo():
     """
-    POST /todos — add a new todo.
-
-    SQL: INSERT INTO todos (id, text, done) VALUES (?, ?, ?)
-    Plain English: "Add a new row with these values."
-    The ? marks are placeholders — we never put variables directly into SQL
-    strings because that opens a security hole called SQL injection.
+    POST /todos — add a todo, tagged with the logged-in user's id.
     """
+    user = verify_token()
+    if not user:
+        return jsonify({"error": "Please log in"}), 401
+
     data = request.json
     conn = get_db()
     conn.execute(
-        "INSERT INTO todos (id, text, done) VALUES (?, ?, ?)",
-        (data["id"], data["text"], 0)
+        "INSERT INTO todos (id, text, done, user_id) VALUES (?, ?, ?, ?)",
+        (data["id"], data["text"], 0, user["user_id"])
     )
     conn.commit()
     conn.close()
 
-    new_todo = {"id": data["id"], "text": data["text"], "done": False}
-    return jsonify(new_todo), 201
+    return jsonify({"id": data["id"], "text": data["text"], "done": False}), 201
 
 
 @app.route("/todos/<todo_id>", methods=["DELETE"])
 def delete_todo(todo_id):
     """
-    DELETE /todos/<todo_id> — remove a todo.
-
-    SQL: DELETE FROM todos WHERE id = ?
-    Plain English: "Remove the row where id matches."
+    DELETE /todos/<todo_id>
+    The WHERE clause includes user_id so users can only delete their OWN todos.
+    Even if someone guesses another user's todo id, they can't delete it.
     """
+    user = verify_token()
+    if not user:
+        return jsonify({"error": "Please log in"}), 401
+
     conn = get_db()
-    conn.execute("DELETE FROM todos WHERE id = ?", (todo_id,))
+    conn.execute(
+        "DELETE FROM todos WHERE id = ? AND user_id = ?",
+        (todo_id, user["user_id"])
+    )
     conn.commit()
     conn.close()
     return jsonify({"message": "Deleted"})
@@ -132,15 +132,15 @@ def delete_todo(todo_id):
 
 @app.route("/todos/<todo_id>", methods=["PATCH"])
 def toggle_todo(todo_id):
-    """
-    PATCH /todos/<todo_id> — flip done between 0 and 1.
+    user = verify_token()
+    if not user:
+        return jsonify({"error": "Please log in"}), 401
 
-    SQL: UPDATE todos SET done = 1 - done WHERE id = ?
-    Plain English: "For the matching row, set done to (1 minus its current value)."
-    1 - 0 = 1 (mark done), 1 - 1 = 0 (mark undone). A neat SQL trick.
-    """
     conn = get_db()
-    conn.execute("UPDATE todos SET done = 1 - done WHERE id = ?", (todo_id,))
+    conn.execute(
+        "UPDATE todos SET done = 1 - done WHERE id = ? AND user_id = ?",
+        (todo_id, user["user_id"])
+    )
     conn.commit()
     conn.close()
     return jsonify({"message": "Updated"})
@@ -148,17 +148,15 @@ def toggle_todo(todo_id):
 
 @app.route("/todos/<todo_id>", methods=["PUT"])
 def update_todo(todo_id):
-    """
-    PUT /todos/<todo_id> — update a todo's text.
+    user = verify_token()
+    if not user:
+        return jsonify({"error": "Please log in"}), 401
 
-    SQL: UPDATE todos SET text = ? WHERE id = ?
-    Plain English: "For the matching row, overwrite the text column."
-    """
     data = request.json
     conn = get_db()
     conn.execute(
-        "UPDATE todos SET text = ? WHERE id = ?",
-        (data["text"], todo_id)
+        "UPDATE todos SET text = ? WHERE id = ? AND user_id = ?",
+        (data["text"], todo_id, user["user_id"])
     )
     conn.commit()
     conn.close()
